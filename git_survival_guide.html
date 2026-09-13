@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git Survival Guide</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #FBFAF7;
+    --card: #FFFFFF;
+    --ink: #1B1A17;
+    --ink-2: #4A4740;
+    --ink-3: #7A756B;
+    --rule: #E4E0D7;
+    --rule-2: #F0EDE6;
+    --accent: #1F5F5B;
+    --accent-soft: #E8F1F0;
+    --danger: #A8321E;
+    --danger-soft: #FBEDEA;
+    --warn: #8A5A00;
+    --warn-soft: #FBF3E2;
+    --good: #2C6A2F;
+    --good-soft: #EBF3EA;
+    --code-bg: #F5F3EE;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { display: flex; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
+
+  /* ---------- Sidebar ---------- */
+  nav {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    flex: 0 0 236px; padding: 22px 14px 60px 20px;
+    border-right: 1px solid var(--rule);
+    background: #F7F5F0;
+  }
+  nav { transition: margin-left .24s ease; }
+  .nav-collapsed nav { margin-left: -236px; }
+  .navhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+  nav .brand { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 2px; }
+  nav .brandsub { font-size: 11px; color: var(--ink-3); }
+  .navbtn {
+    flex: 0 0 auto; width: 26px; height: 26px; padding: 0; display: grid; place-items: center;
+    border: 1px solid var(--rule); background: var(--card); color: var(--ink-2);
+    border-radius: 6px; cursor: pointer; font-size: 16px; line-height: 1; font-family: var(--sans);
+  }
+  .navbtn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .navshow {
+    position: fixed; top: 16px; left: 0; z-index: 60; display: none;
+    width: 24px; height: 36px; padding: 0; border: 1px solid var(--rule); border-left: none;
+    background: var(--card); color: var(--accent); cursor: pointer;
+    border-radius: 0 8px 8px 0; font-size: 15px; line-height: 1; font-family: var(--sans);
+    box-shadow: 0 1px 8px rgba(0,0,0,.08);
+  }
+  .navshow:hover { background: var(--accent-soft); }
+  .nav-collapsed .navshow { display: block; }
+  nav a { display: block; padding: 4px 8px; margin: 1px 0; color: var(--ink-2); text-decoration: none; font-size: 13px; border-radius: 5px; }
+  nav a:hover { background: var(--accent-soft); color: var(--accent); }
+  nav .navgroup { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 16px 0 4px 8px; font-weight: 700; }
+
+  /* ---------- Main ---------- */
+  main { flex: 1 1 auto; min-width: 0; padding: 0 40px 120px; }
+  header.hero { padding: 40px 0 22px; border-bottom: 2px solid var(--ink); margin-bottom: 26px; }
+  header.hero h1 { font-size: 34px; line-height: 1.1; margin: 0 0 8px; letter-spacing: -.02em; }
+  header.hero p { margin: 0; color: var(--ink-2); max-width: 62ch; }
+
+  .searchwrap { position: sticky; top: 0; z-index: 20; background: var(--paper); padding: 12px 0 10px; border-bottom: 1px solid var(--rule); margin-bottom: 26px; }
+  #search {
+    width: 100%; padding: 10px 14px; font-size: 14px; font-family: var(--sans);
+    border: 1px solid var(--rule); border-radius: 8px; background: var(--card); color: var(--ink);
+  }
+  #search:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  #searchnote { font-size: 12px; color: var(--ink-3); margin-top: 6px; height: 14px; }
+
+  h2.sec {
+    font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent);
+    margin: 46px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); font-weight: 700;
+  }
+  h2.sec + .secintro { color: var(--ink-2); margin: 10px 0 20px; max-width: 74ch; }
+  section { scroll-margin-top: 70px; }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 18px 20px; margin: 0 0 14px;
+  }
+  .card > h3 { margin: 0 0 2px; font-size: 17px; font-family: var(--mono); letter-spacing: -.01em; }
+  .card > .tag { color: var(--ink-3); font-size: 13px; margin: 0 0 12px; }
+
+  .f { display: grid; grid-template-columns: 108px 1fr; gap: 10px; padding: 6px 0; border-top: 1px solid var(--rule-2); }
+  .f:first-of-type { border-top: none; }
+  .k { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; padding-top: 3px; }
+  .v { min-width: 0; }
+  .v p { margin: 0 0 6px; }
+  .v p:last-child { margin-bottom: 0; }
+  .k.bad { color: var(--danger); }
+  .k.good { color: var(--good); }
+  .k.warn { color: var(--warn); }
+
+  code { font-family: var(--mono); font-size: .89em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  .cmd { position: relative; margin: 8px 0; }
+  .cmd pre {
+    margin: 0; background: #1E1D1A; color: #EDEAE2; padding: 11px 60px 11px 14px;
+    border-radius: 7px; overflow-x: auto; font-family: var(--mono); font-size: 12.6px; line-height: 1.65;
+  }
+  .cmd pre .c { color: #8C8878; }
+  .cmd pre .o { color: #E2B15B; }
+  .copy {
+    position: absolute; top: 7px; right: 7px; background: #33312C; color: #B8B3A6; border: none;
+    font-size: 10.5px; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: var(--sans); letter-spacing: .04em;
+  }
+  .copy:hover { background: #47443D; color: #EDEAE2; }
+
+  .note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 7px 7px 0; margin: 12px 0; }
+  .note.danger { border-color: var(--danger); background: var(--danger-soft); }
+  .note.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .note.good { border-color: var(--good); background: var(--good-soft); }
+  .note strong { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+
+  /* ---------- Situations ---------- */
+  .sit { background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--danger); border-radius: 0 10px 10px 0; padding: 18px 20px; margin: 0 0 14px; }
+  .sit > h3 { margin: 0 0 12px; font-size: 16.5px; color: var(--danger); font-style: italic; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 13.6px; background: var(--card); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  th { text-align: left; padding: 9px 12px; background: #F2EFE8; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--rule); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--rule-2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td code { background: transparent; padding: 0; color: var(--accent); font-weight: 600; }
+  td:first-child { white-space: nowrap; }
+  table.wrapfirst td:first-child { white-space: normal; }
+
+  details { background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  details summary::marker { color: var(--accent); }
+  details .ans { padding-top: 8px; color: var(--ink-2); border-top: 1px solid var(--rule-2); margin-top: 8px; }
+
+  ol.steps { margin: 8px 0; padding-left: 20px; }
+  ol.steps li { margin-bottom: 5px; }
+  ul.tight { margin: 6px 0; padding-left: 20px; }
+  ul.tight li { margin-bottom: 4px; }
+  .hidden { display: none !important; }
+  footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 12.5px; }
+
+  @media (max-width: 900px) {
+    nav { position: fixed; left: 0; top: 0; z-index: 55; box-shadow: 2px 0 18px rgba(0,0,0,.13); }
+    main { padding: 0 20px 80px; }
+    .f { grid-template-columns: 1fr; gap: 2px; }
+    .k { padding-top: 8px; }
+  }
+</style>
+</head>
+<body>
+<script>
+(function () {
+  var narrow = window.matchMedia('(max-width:900px)').matches, saved = null;
+  try { saved = localStorage.getItem('gsg-nav'); } catch (e) {}
+  if (saved === '1' || (saved === null && narrow)) {
+    document.documentElement.classList.add('nav-collapsed');
+  }
+})();
+</script>
+<button id="navshow" class="navshow" type="button" aria-label="Show menu" title="Show menu (\)">&#8250;</button>
+<div class="shell">
+
+<nav>
+  <div class="navhead">
+    <div>
+      <div class="brand">Git Survival</div>
+      <div class="brandsub">Daily reference &amp; recovery</div>
+    </div>
+    <button id="navtoggle" class="navbtn" type="button" aria-label="Hide menu" title="Hide menu (\)">&#8249;</button>
+  </div>
+  <a href="#model">Mental model</a>
+  <div class="navgroup">Commands</div>
+  <a href="#c-basics">clone · status · add · commit</a>
+  <a href="#c-remote">push · pull · fetch · remote</a>
+  <a href="#c-branch">branch · switch · checkout</a>
+  <a href="#c-integrate">merge · rebase · cherry-pick</a>
+  <a href="#c-undo">reset · revert · restore · stash</a>
+  <a href="#c-inspect">log · diff · show · tag</a>
+  <a href="#c-power">clean · bisect · reflog</a>
+  <div class="navgroup">Workflows</div>
+  <a href="#w-feature">Feature branch workflow</a>
+  <a href="#w-pull">Pulling latest safely</a>
+  <a href="#w-mergerebase">Merge vs rebase</a>
+  <a href="#w-conflict">Resolving conflicts</a>
+  <a href="#w-undo">Undoing commits</a>
+  <a href="#w-sync">Staying in sync</a>
+  <div class="navgroup">Panic room</div>
+  <a href="#situations">All situations</a>
+  <div class="navgroup">Cheat sheets</div>
+  <a href="#cs-daily">1. Most-used commands</a>
+  <a href="#cs-emergency">2. Emergency recovery</a>
+  <a href="#cs-tree">3. Decision tree</a>
+  <a href="#cs-mistakes">4. Top mistakes</a>
+  <a href="#cs-interview">5. Interview questions</a>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Git Survival Guide</h1>
+  <p>A working developer's reference: what each command really does, when to reach for it, and exactly how to get out of trouble. Recovery-first, theory-last.</p>
+</header>
+
+<div class="searchwrap">
+  <input id="search" type="search" placeholder="Search commands, errors, or symptoms — try “diverged”, “force push”, “lost commit”, “detached”" autocomplete="off">
+  <div id="searchnote"></div>
+</div>
+
+<!-- ============ MENTAL MODEL ============ -->
+<section id="model">
+<h2 class="sec">The 60-second mental model</h2>
+<p class="secintro">Almost every confusing Git moment becomes obvious once you know <em>which of four places</em> your change is sitting in, and that a branch is just a sticky note on a commit.</p>
+
+<div class="card" data-searchable>
+  <h3>Four places your work can live</h3>
+  <table>
+    <tr><th>Place</th><th>What's there</th><th>How things move in</th><th>How things move out</th></tr>
+    <tr><td><strong>Working tree</strong></td><td>Files you're editing right now</td><td>You type</td><td><code>git add</code> / <code>git restore</code></td></tr>
+    <tr><td><strong>Index (staging)</strong></td><td>The exact snapshot of your next commit</td><td><code>git add</code></td><td><code>git restore --staged</code> / <code>git commit</code></td></tr>
+    <tr><td><strong>Local repo</strong></td><td>Your commits &amp; branches</td><td><code>git commit</code></td><td><code>git push</code> / <code>git reset</code></td></tr>
+    <tr><td><strong>Remote</strong></td><td>What everyone else sees</td><td><code>git push</code></td><td><code>git fetch</code> / <code>git pull</code></td></tr>
+  </table>
+  <div class="note">
+    <strong>Three facts that resolve 90% of confusion</strong>
+    A <em>branch</em> is just a movable pointer to one commit. <em>HEAD</em> is a pointer to the branch you're on. <code>origin/main</code> is not the remote — it's your local cached memory of the remote from the last time you fetched, which is why <code>git status</code> can confidently lie to you until you run <code>git fetch</code>.
+  </div>
+  <div class="note danger">
+    <strong>The only truly unrecoverable losses</strong>
+    Anything <em>committed</em> is recoverable for ~90 days via <code>git reflog</code>. What Git cannot bring back: uncommitted working-tree edits destroyed by <code>git restore</code>, <code>git checkout -- .</code>, or <code>git reset --hard</code>; and untracked files deleted by <code>git clean -fd</code>. Commit or stash before running anything destructive — that's the whole discipline.
+  </div>
+</div>
+</section>
+
+<!-- ============ COMMANDS: BASICS ============ -->
+<section id="c-basics">
+<h2 class="sec">Commands · Getting work in</h2>
+
+<div class="card" data-searchable>
+  <h3>git clone</h3>
+  <p class="tag">Copy a remote repository — full history included — onto your machine.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Downloads all objects and history, creates a remote named <code>origin</code>, checks out the default branch, and sets up tracking.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Once per project. If you already have the repo, you want <code>git fetch</code>, not another clone.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git clone git@github.com:acme/payments-api.git
+git clone &lt;url&gt; my-folder          <span class="c"># custom directory name</span>
+git clone -b develop &lt;url&gt;         <span class="c"># start on a specific branch</span>
+git clone --depth 1 &lt;url&gt;          <span class="c"># shallow: latest commit only, fast CI clone</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k">Example</div><div class="v">New laptop, joining a team: clone over SSH so you never fight credential prompts on push.</div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Running <code>git clone</code> while already inside another repository, creating a nested repo that confuses every tool you own.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>git init</code> in a folder you just cloned. Don't embed a token in the clone URL — it gets written to <code>.git/config</code> in plaintext.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">A <code>--depth 1</code> clone silently breaks <code>git log</code> history, <code>git bisect</code>, and rebasing onto older commits.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><div class="cmd"><button class="copy">copy</button><pre>git fetch --unshallow</pre></div></div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git status</h3>
+  <p class="tag">The command you should run more than any other.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Reports your branch, how it compares to its upstream, what's staged, what's modified, what's untracked — and crucially, whether a merge/rebase/cherry-pick is <em>currently in progress</em>.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Before every commit, pull, branch switch, and absolutely before anything with <code>--hard</code> or <code>--force</code> in it.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git status
+git status -sb   <span class="c"># short + branch line; the daily driver</span></pre></div>
+    <p>Reading <code>-sb</code> output: first column = index, second = working tree. <code>M </code> staged modification, <code> M</code> unstaged modification, <code>MM</code> both, <code>??</code> untracked, <code>UU</code> conflicted.</p>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Skimming past the line <em>"Your branch and 'origin/main' have diverged"</em> and then trying to push.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">Status compares you against a <em>cached</em> <code>origin/main</code>. If you haven't fetched in an hour, "up to date" means nothing.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><code>git fetch</code> first, then re-read status. Make it a reflex: <code>git fetch &amp;&amp; git status -sb</code>.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git add</h3>
+  <p class="tag">Choose exactly what goes into the next commit.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Copies the current content of a file into the index. It stages <em>content, not files</em> — edit again after adding and you'll have both a staged and unstaged version.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Before committing. Use <code>-p</code> when one file contains two unrelated changes.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git add src/auth.js            <span class="c"># one file</span>
+git add -p                     <span class="c"># interactive, hunk by hunk — the pro move</span>
+git add .                      <span class="c"># everything under current directory</span>
+git add -A                     <span class="c"># everything in the repo, incl. deletions</span>
+git add -u                     <span class="c"># only already-tracked files</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k">Example</div><div class="v">You fixed a bug and also renamed a variable. <code>git add -p</code> lets you ship the fix now and keep the rename for a separate commit.</div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v"><code>git add .</code> hoovering up <code>.env</code>, <code>node_modules/</code>, a 400 MB fixture, or <code>console.log</code> debris.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't run <code>git add -A</code> from the repo root without reading <code>git status</code> first. Don't fix a bad <code>.gitignore</code> after the fact and expect already-tracked files to disappear — they won't.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">A secret gets staged, then committed, then pushed. Now it's in history and in everyone's clone.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre><span class="c"># staged only</span>
+git restore --staged .env
+
+<span class="c"># committed but not pushed</span>
+git reset --soft HEAD~1
+
+<span class="c"># tracked by accident, should be ignored from now on</span>
+git rm --cached .env &amp;&amp; echo ".env" &gt;&gt; .gitignore
+
+<span class="c"># already pushed: ROTATE THE SECRET FIRST, then scrub history</span>
+git filter-repo --path .env --invert-paths   <span class="c"># then coordinate a force-push</span></pre></div>
+    <p>Treat any pushed secret as compromised. History rewriting is cleanup, not containment.</p>
+  </div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git commit</h3>
+  <p class="tag">Freeze the staged snapshot into permanent, recoverable history.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Creates an immutable object containing the index snapshot, author, message, and a pointer to its parent(s), then moves your branch pointer forward.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">At every point the code makes sense as a unit. Commit early and often locally — you can always tidy with an interactive rebase before opening the PR.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git commit -m "fix(auth): reject expired refresh tokens"
+git commit                     <span class="c"># opens editor — use for a real body</span>
+git commit -am "msg"           <span class="c"># stage TRACKED changes + commit</span>
+git commit --amend             <span class="c"># rewrite the last commit</span>
+git commit --amend --no-edit   <span class="c"># same message, add staged changes</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Believing <code>-am</code> includes new files. It does not — untracked files need an explicit <code>git add</code>.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>--amend</code> a commit that other people have already pulled. Don't write "fix stuff" — future-you will bisect into it and curse.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">You amend a pushed commit; the SHA changes; your next push is rejected as non-fast-forward, and a teammate who pulled the old one now has a divergent history.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><code>git reflog</code> always still holds the pre-amend commit. If the branch is genuinely yours alone, <code>git push --force-with-lease</code> and tell the team.</div></div>
+</div>
+</section>
+
+<!-- ============ COMMANDS: REMOTE ============ -->
+<section id="c-remote">
+<h2 class="sec">Commands · Talking to the remote</h2>
+
+<div class="card" data-searchable>
+  <h3>git push</h3>
+  <p class="tag">Publish local commits to the remote branch.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Uploads commits and fast-forwards the remote branch pointer. It refuses by default if that would discard remote commits.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git push
+git push -u origin feature/checkout   <span class="c"># first push; sets upstream tracking</span>
+git push --force-with-lease           <span class="c"># after rebase/amend, on YOUR branch</span>
+git push origin v1.4.0                <span class="c"># push one tag</span>
+git push origin --delete old-branch   <span class="c"># delete remote branch</span></pre></div>
+    <p>Set this once and never mis-push again:</p>
+    <div class="cmd"><button class="copy">copy</button><pre>git config --global push.default simple
+git config --global push.autoSetupRemote true</pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Assuming the branch you pushed is the branch you're on. Read the confirmation line Git prints — it names both refs.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Never <code>git push --force</code> to <code>main</code>, <code>develop</code>, or any branch someone else has checked out. Prefer <code>--force-with-lease</code> universally.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v"><code>! [rejected] main -&gt; main (non-fast-forward)</code> — the remote has commits you don't.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><div class="cmd"><button class="copy">copy</button><pre>git fetch origin
+git rebase origin/main    <span class="c"># or: git merge origin/main</span>
+git push</pre></div></div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git fetch</h3>
+  <p class="tag">The always-safe command. Downloads, changes nothing you can see.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Updates remote-tracking refs (<code>origin/main</code>, <code>origin/feature-x</code>) and downloads objects. Your branch, working tree, and index are untouched.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Any time you want the truth about the remote without committing to an integration strategy. There is no scenario where fetching hurts you.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git fetch
+git fetch --all --prune              <span class="c"># all remotes, drop refs for deleted branches</span>
+git fetch origin main
+
+<span class="c"># what landed upstream that I don't have?</span>
+git log --oneline HEAD..origin/main
+<span class="c"># what do I have that upstream doesn't?</span>
+git log --oneline origin/main..HEAD</pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Expecting fetch to update your files. It doesn't — that's the point. Fetch, look, <em>then</em> merge or rebase.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">Your branch list fills with long-dead <code>origin/*</code> branches.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><code>git fetch --prune</code>, or make it permanent with <code>git config --global fetch.prune true</code>.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git pull</h3>
+  <p class="tag">Fetch plus integrate. The command that causes the most accidental merge commits.</p>
+  <div class="f"><div class="k">Does</div><div class="v"><code>git fetch</code> followed by <code>git merge</code> (default) or <code>git rebase</code> (with <code>--rebase</code>) of the upstream branch into yours.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git pull --ff-only    <span class="c"># refuse to create a merge; safest default</span>
+git pull --rebase     <span class="c"># replay my commits on top of theirs</span>
+git pull              <span class="c"># merge — fine on shared branches, noisy on yours</span></pre></div>
+    <div class="note good"><strong>Configure this today</strong>
+    <div class="cmd"><button class="copy">copy</button><pre>git config --global pull.ff only</pre></div>
+    Now <code>git pull</code> either fast-forwards cleanly or stops and tells you to decide. No more surprise "Merge branch 'main' of github.com…" commits.</div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Pulling with a dirty working tree, so the merge aborts halfway or drags your edits into a conflict.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>git pull</code> on a branch you just rebased — plain pull will merge the old remote commits straight back in and duplicate everything.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">You end up with a tangled merge or your rebase undone.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><div class="cmd"><button class="copy">copy</button><pre>git reset --hard ORIG_HEAD   <span class="c"># ORIG_HEAD = where you were before the pull</span></pre></div>Works immediately after the pull. Later, use <code>git reflog</code>.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git remote</h3>
+  <p class="tag">Manage the URLs Git talks to.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git remote -v
+git remote add upstream git@github.com:original/repo.git   <span class="c"># fork workflow</span>
+git remote set-url origin git@github.com:acme/repo.git     <span class="c"># HTTPS → SSH</span>
+git remote show origin                                     <span class="c"># incl. stale branches</span>
+git remote prune origin</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Example</div><div class="v">Working on a fork: <code>origin</code> is yours, <code>upstream</code> is the source. Sync with <code>git fetch upstream &amp;&amp; git rebase upstream/main</code>.</div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Pushing to <code>upstream</code> instead of <code>origin</code> on a fork you don't own.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">Ask a maintainer to revert, or if you have rights: <code>git push upstream --force-with-lease &lt;branch&gt;:&lt;branch&gt;</code> back to the previous SHA from your reflog.</div></div>
+</div>
+</section>
+
+<!-- ============ COMMANDS: BRANCHING ============ -->
+<section id="c-branch">
+<h2 class="sec">Commands · Branching &amp; moving around</h2>
+
+<div class="card" data-searchable>
+  <h3>git branch</h3>
+  <p class="tag">List, create, rename, and delete pointers.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git branch -vv                <span class="c"># local branches + upstream + ahead/behind</span>
+git branch -a                 <span class="c"># include remote-tracking branches</span>
+git branch feature/x abc1234  <span class="c"># create at a specific commit (recovery!)</span>
+git branch -m new-name        <span class="c"># rename current branch</span>
+git branch -d old             <span class="c"># safe delete: refuses if unmerged</span>
+git branch -D old             <span class="c"># force delete</span>
+git branch --merged main      <span class="c"># what's safe to clean up</span></pre></div>
+    <p>Bulk cleanup of branches already merged into main:</p>
+    <div class="cmd"><button class="copy">copy</button><pre>git branch --merged main | grep -vE "^\*|main|develop" | xargs -r git branch -d</pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Reaching for <code>-D</code> the moment <code>-d</code> complains. That complaint is the safety net doing its job.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">You <code>-D</code> a branch holding two days of unmerged work.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><div class="cmd"><button class="copy">copy</button><pre>git reflog                        <span class="c"># find the branch tip SHA</span>
+git branch feature/x abc1234      <span class="c"># resurrect it</span></pre></div></div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git switch</h3>
+  <p class="tag">The modern, unambiguous way to change branches (Git 2.23+). Prefer it over <code>checkout</code>.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git switch main
+git switch -c feature/checkout        <span class="c"># create + switch</span>
+git switch -                          <span class="c"># back to previous branch</span>
+git switch -c fix origin/fix          <span class="c"># start from a remote branch</span>
+git switch --detach abc1234           <span class="c"># deliberately detached HEAD</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k">Why</div><div class="v"><code>checkout</code> does two unrelated jobs — moving HEAD and overwriting files — so a typo can silently destroy work. <code>switch</code> only moves HEAD and refuses when it would lose changes.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v"><em>"Your local changes would be overwritten by checkout."</em></div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">Pick one: commit them, <code>git stash -u</code> them, or carry them across with <code>git switch -m other-branch</code>.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git checkout</h3>
+  <p class="tag">The legacy Swiss-army knife. Still everywhere in docs and muscle memory.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Three different jobs depending on arguments: switch branches, detach HEAD onto a commit, or overwrite files from a commit.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git checkout main                  <span class="c"># → git switch main</span>
+git checkout -b feature/x          <span class="c"># → git switch -c feature/x</span>
+git checkout abc1234               <span class="c"># → git switch --detach abc1234</span>
+git checkout -- src/app.js         <span class="c"># → git restore src/app.js  ⚠ DESTRUCTIVE</span>
+git checkout main -- config.yml    <span class="c"># take one file from another branch</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v"><code>git checkout -- .</code> is the single most common way developers permanently lose an afternoon of work. There is no reflog for uncommitted files.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">If the content was ever <code>git add</code>-ed, the blob still exists: <code>git fsck --lost-found</code>, then read the dangling blobs. Otherwise, your editor's local history is the only hope.</div></div>
+</div>
+</section>
+
+<!-- ============ COMMANDS: INTEGRATING ============ -->
+<section id="c-integrate">
+<h2 class="sec">Commands · Integrating work</h2>
+
+<div class="card" data-searchable>
+  <h3>git merge</h3>
+  <p class="tag">Join two histories, preserving what actually happened.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Fast-forwards the pointer if possible; otherwise creates a merge commit with two parents. Existing commits are never rewritten.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Bringing a finished feature into a shared branch, or updating your branch from main when others share it.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git switch main &amp;&amp; git merge feature/checkout
+git merge --no-ff feature/x     <span class="c"># always record a merge commit</span>
+git merge --squash feature/x    <span class="c"># collapse into one staged change</span>
+git merge --abort               <span class="c"># bail out mid-conflict</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Committing a conflict resolution that still contains <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> markers, or resolving by deleting the other person's code wholesale.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't merge <code>main</code> into your feature branch ten times — the log becomes unreadable. Rebase, or merge once at the end.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">A bad merge lands and breaks the build.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><div class="cmd"><button class="copy">copy</button><pre>git merge --abort                    <span class="c"># still mid-merge</span>
+git reset --hard ORIG_HEAD           <span class="c"># merged locally, not pushed</span>
+git revert -m 1 &lt;merge-sha&gt;          <span class="c"># already pushed (-m 1 = keep the branch you merged INTO)</span></pre></div></div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git rebase</h3>
+  <p class="tag">Replay your commits on a new base. New SHAs, linear history, sharper edges.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Takes each of your commits, re-applies them one at a time on top of the target, producing <em>brand-new commits</em>. The originals become unreferenced (but live on in reflog).</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Tidying your own unpushed branch before review, or updating a solo feature branch onto the latest main.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git fetch &amp;&amp; git rebase origin/main
+git rebase -i HEAD~4          <span class="c"># squash / reword / reorder / drop</span>
+git rebase --continue         <span class="c"># after resolving a conflict</span>
+git rebase --skip             <span class="c"># drop the commit being applied</span>
+git rebase --abort            <span class="c"># full undo, back to the start</span>
+git rebase --autostash origin/main   <span class="c"># auto-shelve dirty tree first</span></pre></div>
+    <p>In interactive mode: <code>pick</code> keep · <code>reword</code> change message · <code>squash</code> fold into previous keeping both messages · <code>fixup</code> fold in silently · <code>edit</code> pause to amend · <code>drop</code> delete.</p>
+  </div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v"><strong>The golden rule:</strong> never rebase commits that exist on a branch other people have pulled. You're not editing history, you're handing everyone a different history.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v">Conflicts fire on every single commit; you lose track of which step you're on; the finished branch needs a force-push.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><div class="cmd"><button class="copy">copy</button><pre>git rebase --abort                       <span class="c"># mid-rebase: nothing lost</span>
+git reflog                               <span class="c"># finished but wrong</span>
+git reset --hard HEAD@{5}                <span class="c"># the SHA from just before the rebase</span></pre></div>
+  <p>Turn on conflict memory so you only solve each conflict once: <code>git config --global rerere.enabled true</code>.</p></div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git cherry-pick</h3>
+  <p class="tag">Copy one specific commit onto the branch you're on.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Re-applies a commit's diff as a new commit with a new SHA on your current branch.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Backporting a hotfix to a release branch, or rescuing a commit you made on the wrong branch.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git cherry-pick abc1234
+git cherry-pick abc1234 def5678       <span class="c"># several</span>
+git cherry-pick abc1234..def5678      <span class="c"># a range (exclusive of the first)</span>
+git cherry-pick -n abc1234            <span class="c"># apply but don't commit</span>
+git cherry-pick -x abc1234            <span class="c"># record source SHA in the message</span>
+git cherry-pick --continue | --abort</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Example</div><div class="v">Critical fix is on <code>main</code>, customers are on <code>release/2.3</code>. <code>git switch release/2.3 &amp;&amp; git cherry-pick -x &lt;sha&gt;</code>.</div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Cherry-picking instead of merging a whole branch — you get duplicate commits with different SHAs and confusing conflicts when the branch merges later.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><code>git cherry-pick --abort</code> mid-flight; <code>git reset --hard HEAD~1</code> if it's committed and unpushed; <code>git revert</code> if pushed.</div></div>
+</div>
+</section>
+
+<!-- ============ COMMANDS: UNDO ============ -->
+<section id="c-undo">
+<h2 class="sec">Commands · Undoing &amp; shelving</h2>
+
+<div class="card" data-searchable>
+  <h3>git reset</h3>
+  <p class="tag">Move the branch pointer. The mode decides how much collateral damage.</p>
+  <div class="f"><div class="k">Does</div><div class="v">
+    <table>
+      <tr><th>Mode</th><th>Branch ptr</th><th>Index</th><th>Working tree</th><th>Use it to…</th></tr>
+      <tr><td><code>--soft</code></td><td>moves</td><td>kept</td><td>kept</td><td>redo the last commit, changes stay staged</td></tr>
+      <tr><td><code>--mixed</code> <em>(default)</em></td><td>moves</td><td>reset</td><td>kept</td><td>unstage everything, keep edits</td></tr>
+      <tr><td><code>--hard</code></td><td>moves</td><td>reset</td><td><strong>wiped</strong></td><td>throw it all away</td></tr>
+    </table>
+  </div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git reset --soft HEAD~1        <span class="c"># undo last commit, keep everything staged</span>
+git reset HEAD~1               <span class="c"># undo last commit, keep files, unstage</span>
+git reset --hard origin/main   <span class="c"># make local identical to remote ⚠</span>
+git reset --hard ORIG_HEAD     <span class="c"># undo the merge/rebase/pull I just did</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Never <code>--hard</code> with uncommitted work you'd miss, and never on a pushed shared branch — use <code>git revert</code> there instead.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">Discarded <em>commits</em> are safe: <code>git reflog</code> → <code>git reset --hard HEAD@{1}</code>. Discarded <em>uncommitted</em> changes are gone unless they were staged, in which case try <code>git fsck --lost-found</code>.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git revert</h3>
+  <p class="tag">Undo by adding, not deleting. The only safe undo for pushed work.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Creates a new commit applying the inverse diff. History stays intact, so nobody else's clone breaks.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">Anything already on <code>main</code>, or any branch someone else might have.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git revert abc1234
+git revert --no-commit abc1234 def5678   <span class="c"># batch into one commit</span>
+git revert -m 1 &lt;merge-sha&gt;              <span class="c"># revert a merge commit</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Reverting a merge, then later re-merging the same branch and wondering why the changes don't come back — Git thinks it's already merged.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">Revert the revert (<code>git revert &lt;revert-sha&gt;</code>), or rebase the feature branch onto the new main so its commits get fresh SHAs.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git restore</h3>
+  <p class="tag">Modern, explicit file-level undo (Git 2.23+). Replaces <code>checkout --</code> and <code>reset HEAD</code>.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git restore src/app.js                     <span class="c"># discard unstaged edits ⚠ permanent</span>
+git restore --staged src/app.js            <span class="c"># unstage, keep the edit</span>
+git restore --staged --worktree src/app.js <span class="c"># nuke both</span>
+git restore --source=HEAD~2 -- config.yml  <span class="c"># pull one file from an old commit</span>
+git restore .                              <span class="c"># discard ALL unstaged edits ⚠⚠</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't type <code>git restore .</code> as a "reset my mess" reflex. Run <code>git stash -u</code> instead — same clean tree, fully reversible.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">Unstaged content is unrecoverable. Staged content may survive in dangling blobs: <code>git fsck --lost-found</code>.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git stash</h3>
+  <p class="tag">Shelve work-in-progress and get a clean tree in one move.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Saves modified <em>tracked</em> files (untracked only with <code>-u</code>) onto a stack of hidden commits, then reverts the working tree.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git stash push -u -m "wip: checkout validation"
+git stash list
+git stash show -p stash@{0}     <span class="c"># inspect before applying</span>
+git stash pop                   <span class="c"># apply + delete entry</span>
+git stash apply stash@{1}       <span class="c"># apply, keep entry (safer)</span>
+git stash branch fix-wip        <span class="c"># new branch from the stash's base commit</span>
+git stash drop stash@{0}</pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Forgetting <code>-u</code>, so brand-new files stay behind — and then <code>git clean -fd</code> deletes them. Also: unlabelled stashes pile up until nobody knows what <code>stash@{4}</code> was.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't use stash as long-term storage. A WIP commit on a scratch branch is visible, named, and safe.</div></div>
+  <div class="f"><div class="k warn">Goes wrong</div><div class="v"><code>git stash pop</code> conflicts. Note the entry is <em>kept</em> when pop conflicts — don't panic and re-pop.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><div class="cmd"><button class="copy">copy</button><pre><span class="c"># dropped or cleared a stash by accident</span>
+git fsck --unreachable | grep commit | cut -d' ' -f3 | xargs git log --merges --no-walk --oneline
+git stash apply &lt;sha&gt;</pre></div></div></div>
+</div>
+</section>
+
+<!-- ============ COMMANDS: INSPECT ============ -->
+<section id="c-inspect">
+<h2 class="sec">Commands · Looking around</h2>
+
+<div class="card" data-searchable>
+  <h3>git log</h3>
+  <p class="tag">Read history — and answer "who broke this and when".</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git log --oneline --graph --decorate --all   <span class="c"># the one to alias</span>
+git log -5 --stat
+git log -p src/auth.js            <span class="c"># full diffs for one file</span>
+git log --follow src/auth.js      <span class="c"># survive renames</span>
+git log -S"deprecatedFlag"        <span class="c"># pickaxe: when was this string added/removed</span>
+git log --author="priya" --since="2 weeks ago"
+git log main..feature             <span class="c"># in feature, not in main</span>
+git log --oneline HEAD..origin/main   <span class="c"># what I'm about to pull</span></pre></div>
+    <p>Worth aliasing: <code>git config --global alias.lg "log --oneline --graph --decorate --all -20"</code></p>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Confusing <code>A..B</code> (commits in B not in A) with <code>A...B</code> (commits in either but not both). For <code>git diff</code> the three-dot form means "changes on B since it diverged from A" — that's the PR view.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git diff</h3>
+  <p class="tag">See exactly what changed, before you commit something you regret.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git diff                      <span class="c"># working tree vs index (unstaged)</span>
+git diff --staged             <span class="c"># index vs HEAD — what you're about to commit</span>
+git diff HEAD                 <span class="c"># everything uncommitted</span>
+git diff main...feature       <span class="c"># what the PR will show</span>
+git diff --stat               <span class="c"># summary only</span>
+git diff --name-only main     <span class="c"># just the file list</span>
+git diff abc1234 def5678 -- src/</pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Running plain <code>git diff</code> after staging, seeing nothing, and concluding there are no changes. You want <code>--staged</code>.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git show</h3>
+  <p class="tag">Inspect one object in detail.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git show abc1234                  <span class="c"># message + full diff</span>
+git show abc1234 --stat           <span class="c"># files touched only</span>
+git show abc1234:src/config.js    <span class="c"># file contents AT that commit</span>
+git show HEAD~3
+git show v1.4.0                   <span class="c"># what a tag points at</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k">Example</div><div class="v">Before cherry-picking, <code>git show &lt;sha&gt;</code> to confirm it's really the fix and doesn't drag unrelated changes along.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git tag</h3>
+  <p class="tag">Name a commit permanently — usually a release.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git tag -a v1.4.0 -m "Release 1.4.0"   <span class="c"># annotated: use this for releases</span>
+git tag v1.4.0-rc1                     <span class="c"># lightweight: just a pointer</span>
+git push origin v1.4.0
+git push --tags                        <span class="c"># push all local tags</span>
+git tag -d v1.4.0                      <span class="c"># delete locally</span>
+git push origin --delete v1.4.0        <span class="c"># delete on remote</span>
+git describe --tags                    <span class="c"># human-readable version of HEAD</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Assuming <code>git push</code> sends tags. It doesn't — tags need an explicit push, which is why CI so often fails to see a release.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't move a published tag. Anyone who already fetched keeps the old one, and now "v1.4.0" means two different things. Cut <code>v1.4.1</code> instead.</div></div>
+</div>
+</section>
+
+<!-- ============ COMMANDS: POWER ============ -->
+<section id="c-power">
+<h2 class="sec">Commands · Power tools</h2>
+
+<div class="card" data-searchable>
+  <h3>git clean</h3>
+  <p class="tag">Delete untracked files. Irreversible. Always dry-run first.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git clean -n           <span class="c"># DRY RUN — always start here</span>
+git clean -nd          <span class="c"># incl. untracked directories</span>
+git clean -fd          <span class="c"># actually delete</span>
+git clean -fdx         <span class="c"># also delete ignored files (node_modules, .env) ⚠⚠</span>
+git clean -i           <span class="c"># interactive</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v"><code>-fdx</code> deletes your <code>.env</code>, local certs, and IDE settings. There is no reflog, no stash, no undo.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v">Nothing in Git can help. Only your OS trash, backup, or IDE local history. This is why <code>-n</code> exists.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git bisect</h3>
+  <p class="tag">Binary-search history to find the commit that introduced a bug. 1000 commits → 10 tests.</p>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git bisect start
+git bisect bad                 <span class="c"># current commit is broken</span>
+git bisect good v1.3.0         <span class="c"># this release was fine</span>
+<span class="c"># Git checks out a midpoint; test it, then:</span>
+git bisect good   |   git bisect bad
+<span class="c"># ...repeat until Git names the first bad commit</span>
+git bisect reset               <span class="c"># ALWAYS finish with this</span>
+
+<span class="c"># fully automated:</span>
+git bisect run npm test -- tests/checkout.spec.js</pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Mistake</div><div class="v">Forgetting <code>git bisect reset</code>, leaving yourself in detached HEAD hours later wondering where your branch went.</div></div>
+  <div class="f"><div class="k good">Recover</div><div class="v"><code>git bisect reset</code> returns you to the branch you started from. Use <code>git bisect skip</code> for commits that don't build.</div></div>
+</div>
+
+<div class="card" data-searchable>
+  <h3>git reflog</h3>
+  <p class="tag">The undo history for your branch pointers. This is the command that saves your job.</p>
+  <div class="f"><div class="k">Does</div><div class="v">Logs every position HEAD has occupied — commits, checkouts, resets, merges, rebases — even if the commits are no longer reachable from any branch. Kept ~90 days.</div></div>
+  <div class="f"><div class="k">When</div><div class="v">The instant you think "my work is gone". Before you try anything else.</div></div>
+  <div class="f"><div class="k">How</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git reflog
+git reflog --date=relative
+git reflog show feature/x           <span class="c"># one branch's history</span>
+git show HEAD@{3}                   <span class="c"># inspect before jumping</span>
+
+<span class="c"># two ways back:</span>
+git reset --hard HEAD@{3}           <span class="c"># move current branch there</span>
+git branch rescue abc1234           <span class="c"># or park it on a new branch (safer)</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k good">Golden rule</div><div class="v">Recover onto a <em>new branch</em> first (<code>git branch rescue &lt;sha&gt;</code>), inspect it, and only then reset. That way a mis-read reflog entry costs you nothing.</div></div>
+  <div class="f"><div class="k warn">Limits</div><div class="v">Reflog is local and per-clone — it can't recover someone else's lost work, it doesn't cover uncommitted changes, and entries expire (30 days for unreachable commits, 90 for the rest).</div></div>
+</div>
+</section>
+
+<!-- ============ WORKFLOWS ============ -->
+<section id="w-feature">
+<h2 class="sec">Workflow · Feature branch, start to finish</h2>
+<div class="card" data-searchable>
+  <div class="cmd"><button class="copy">copy</button><pre><span class="c"># 1. Start from a genuinely current main</span>
+git switch main
+git pull --ff-only
+
+<span class="c"># 2. Branch</span>
+git switch -c feat/checkout-validation
+
+<span class="c"># 3. Work in small commits</span>
+git add -p
+git commit -m "feat(checkout): validate postal codes"
+
+<span class="c"># 4. Publish early — a pushed branch is a backup</span>
+git push -u origin feat/checkout-validation
+
+<span class="c"># 5. Stay current while you work (solo branch → rebase)</span>
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+
+<span class="c"># 6. Tidy the story before review</span>
+git rebase -i origin/main      <span class="c"># squash "fix typo" commits away</span>
+git push --force-with-lease
+
+<span class="c"># 7. Open PR, get it merged, then clean up</span>
+git switch main &amp;&amp; git pull --ff-only
+git branch -d feat/checkout-validation
+git fetch --prune</pre></div>
+  <div class="note"><strong>The one rule that keeps this safe</strong>
+  Rebase and force-push freely on a branch only you have. The moment a second person checks it out, switch to <code>git merge origin/main</code> and stop force-pushing.</div>
+</div>
+</section>
+
+<section id="w-pull">
+<h2 class="sec">Workflow · Pulling latest changes without drama</h2>
+<div class="card" data-searchable>
+  <div class="cmd"><button class="copy">copy</button><pre><span class="c"># The safe sequence, every time</span>
+git status                   <span class="c"># dirty? commit or stash first</span>
+git stash push -u -m "wip"   <span class="c"># if dirty</span>
+git fetch origin
+git log --oneline HEAD..origin/main    <span class="c"># see what's coming</span>
+git pull --ff-only           <span class="c"># or: git rebase origin/main</span>
+git stash pop                <span class="c"># if you stashed</span></pre></div>
+  <table class="wrapfirst">
+    <tr><th>What <code>--ff-only</code> tells you</th><th>Meaning</th><th>Do this</th></tr>
+    <tr><td>Fast-forwards cleanly</td><td>You had no local commits</td><td>Nothing — you're done</td></tr>
+    <tr><td><code>fatal: Not possible to fast-forward</code></td><td>You have local commits too; histories diverged</td><td><code>git rebase origin/main</code> (your branch) or <code>git merge origin/main</code> (shared)</td></tr>
+  </table>
+</div>
+</section>
+
+<section id="w-mergerebase">
+<h2 class="sec">Workflow · Merge vs rebase, decided in ten seconds</h2>
+<div class="card" data-searchable>
+  <table class="wrapfirst">
+    <tr><th>Question</th><th>Answer → do this</th></tr>
+    <tr><td>Has anyone else pulled this branch?</td><td><strong>Yes → merge.</strong> No → rebase is fine</td></tr>
+    <tr><td>Are you updating your own feature branch from main?</td><td><strong>Rebase</strong> — linear history, clean PR diff</td></tr>
+    <tr><td>Are you bringing a finished feature into main?</td><td><strong>Merge</strong> (often squash-merge via the PR button)</td></tr>
+    <tr><td>Is this <code>main</code>, <code>develop</code>, or <code>release/*</code>?</td><td><strong>Never rebase.</strong> Merge or revert only</td></tr>
+    <tr><td>Do you need to preserve the true sequence of events (audit, incident)?</td><td><strong>Merge</strong> — rebase invents a history that never happened</td></tr>
+    <tr><td>Deep in conflicts and losing the thread?</td><td><strong>Merge</strong> — one conflict resolution instead of one per commit</td></tr>
+  </table>
+  <div class="note"><strong>Trade-off in one line</strong>
+  Merge keeps history <em>honest</em> but bushy; rebase keeps it <em>readable</em> but rewrites SHAs, which means force-pushing, which means it must be your branch alone.</div>
+</div>
+</section>
+
+<section id="w-conflict">
+<h2 class="sec">Workflow · Resolving merge conflicts</h2>
+<div class="card" data-searchable>
+  <div class="f"><div class="k">Steps</div><div class="v">
+    <ol class="steps">
+      <li><code>git status</code> — the "Unmerged paths" list is your to-do list.</li>
+      <li>Open each file and find the markers.</li>
+      <li>Edit to the correct <em>combined</em> result and delete all three marker lines.</li>
+      <li><code>git add &lt;file&gt;</code> to mark it resolved.</li>
+      <li>Repeat, then <code>git commit</code> (merge) or <code>git rebase --continue</code> (rebase).</li>
+      <li>Run the tests. A conflict that compiles is not a conflict that's correct.</li>
+    </ol>
+  </div></div>
+  <div class="f"><div class="k">Markers</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+const timeout = 3000;        <span class="c">// "ours"</span>
+=======
+const timeout = 5000;        <span class="c">// "theirs"</span>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/slow-network</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Shortcuts</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git checkout --ours  path/to/file    <span class="c"># take one side wholesale</span>
+git checkout --theirs path/to/file
+git diff --name-only --diff-filter=U <span class="c"># list conflicted files</span>
+git mergetool                        <span class="c"># open your configured 3-way tool</span>
+git merge --abort  |  git rebase --abort</pre></div>
+  </div></div>
+  <div class="f"><div class="k bad">Gotcha</div><div class="v"><strong>During a rebase, "ours" and "theirs" are swapped.</strong> "Ours" is the branch you're rebasing <em>onto</em> (e.g. main) and "theirs" is <em>your</em> commit being replayed. Check with <code>git status</code> before blindly picking a side.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't resolve by deleting the other person's code to make the error go away. Don't commit with markers still in the file — grep for <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> before committing.</div></div>
+  <div class="f"><div class="k good">Prevention</div><div class="v">Small PRs, short-lived branches, rebase onto main daily, and <code>git config --global rerere.enabled true</code> so Git replays resolutions you've already made.</div></div>
+</div>
+</section>
+
+<section id="w-undo">
+<h2 class="sec">Workflow · Undoing commits — the decision matrix</h2>
+<div class="card" data-searchable>
+  <table class="wrapfirst">
+    <tr><th>Situation</th><th>Command</th><th>Result</th></tr>
+    <tr><td>Last commit, message wrong</td><td><code>git commit --amend</code></td><td>Rewrites it in place</td></tr>
+    <tr><td>Last commit, forgot a file</td><td><code>git add f &amp;&amp; git commit --amend --no-edit</code></td><td>Folds it in</td></tr>
+    <tr><td>Undo last commit, keep changes staged</td><td><code>git reset --soft HEAD~1</code></td><td>Ready to re-commit</td></tr>
+    <tr><td>Undo last commit, keep files only</td><td><code>git reset HEAD~1</code></td><td>Unstaged edits remain</td></tr>
+    <tr><td>Undo last commit and the work</td><td><code>git reset --hard HEAD~1</code></td><td>Gone (reflog only)</td></tr>
+    <tr><td>Undo last 3 commits, keep the code</td><td><code>git reset --soft HEAD~3</code></td><td>One clean re-commit</td></tr>
+    <tr><td>Undo a commit from the middle</td><td><code>git rebase -i &lt;sha&gt;~1</code> → <code>drop</code></td><td>Rewrites history after it</td></tr>
+    <tr><td><strong>Already pushed / shared</strong></td><td><code>git revert &lt;sha&gt;</code></td><td>New inverse commit — safe</td></tr>
+  </table>
+  <div class="note danger"><strong>The dividing line</strong>
+  Not pushed → <code>reset</code> and <code>amend</code> are free. Pushed and shared → <code>revert</code>. The only exception is a personal feature branch, where <code>--force-with-lease</code> is acceptable if you announce it.</div>
+</div>
+</section>
+
+<section id="w-sync">
+<h2 class="sec">Workflow · Keeping local and remote in sync</h2>
+<div class="card" data-searchable>
+  <div class="cmd"><button class="copy">copy</button><pre><span class="c"># Morning routine</span>
+git fetch --all --prune
+git switch main &amp;&amp; git pull --ff-only
+git branch -vv                       <span class="c"># see ahead/behind + [gone] branches</span>
+
+<span class="c"># Clean up branches whose remote was deleted after merge</span>
+git fetch --prune
+git branch -vv | grep ': gone]' | awk '{print $1}' | xargs -r git branch -d
+
+<span class="c"># Nuclear option: make local branch exactly match remote (discards local work)</span>
+git fetch origin
+git reset --hard origin/main</pre></div>
+  <table class="wrapfirst">
+    <tr><th>Status says</th><th>Means</th><th>Fix</th></tr>
+    <tr><td>ahead 3</td><td>3 local commits unpushed</td><td><code>git push</code></td></tr>
+    <tr><td>behind 5</td><td>Remote moved on; you didn't</td><td><code>git pull --ff-only</code></td></tr>
+    <tr><td>ahead 2, behind 5</td><td>Diverged</td><td><code>git rebase origin/main</code> then push</td></tr>
+    <tr><td><code>[origin/x: gone]</code></td><td>Remote branch deleted (PR merged)</td><td><code>git branch -d x</code></td></tr>
+  </table>
+  <div class="note good"><strong>One-time config that prevents most of this</strong>
+  <div class="cmd"><button class="copy">copy</button><pre>git config --global pull.ff only
+git config --global fetch.prune true
+git config --global push.autoSetupRemote true
+git config --global rerere.enabled true
+git config --global rebase.autostash true</pre></div></div>
+</div>
+</section>
+
+<!-- ============ SITUATIONS ============ -->
+<section id="situations">
+<h2 class="sec">The panic room · Real situations, safe fixes</h2>
+<p class="secintro">Each entry follows the same shape: what happened → why → what <em>not</em> to do → the safe fix → prevention. Find yours with the search box above.</p>
+
+<div class="sit" data-searchable>
+  <h3>"I committed on main by mistake." (not pushed)</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">Two commits are sitting on local <code>main</code> that belong on a feature branch.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">You started coding before switching branches — the classic "just a quick fix" trap.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>git reset --hard</code> first and hope the code survives. Don't push "just to be safe".</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Create the branch <em>from where you are</em> (it keeps the commits), then rewind main.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git branch feature/my-work       <span class="c"># branch now points at your commits</span>
+git reset --hard origin/main     <span class="c"># main back to the remote's position</span>
+git switch feature/my-work       <span class="c"># carry on working</span>
+
+<span class="c"># Only some commits belong elsewhere? cherry-pick instead:</span>
+git switch -c feature/my-work
+git cherry-pick abc1234
+git switch main &amp;&amp; git reset --hard origin/main</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Put the branch name in your shell prompt, and enable branch protection on <code>main</code> so a stray push is refused by the server.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I accidentally pushed to the wrong branch."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">Commits meant for a feature branch are now on <code>main</code> (or another shared branch) on the remote.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">Wrong upstream tracking, or you never switched branches.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't force-push <code>main</code> back to its old SHA if anyone may have pulled. You'd be rewriting shared history and everyone who pulled gets a broken clone.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Copy the commits where they belong, then <em>revert</em> them on the shared branch.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre><span class="c"># 1. Get the work onto the right branch</span>
+git switch -c feature/correct origin/main~2   <span class="c"># base before your commits</span>
+git cherry-pick abc1234 def5678
+git push -u origin feature/correct
+
+<span class="c"># 2. Undo them on main, safely</span>
+git switch main &amp;&amp; git pull --ff-only
+git revert def5678 abc1234        <span class="c"># newest first</span>
+git push</pre></div>
+    <p>If you pushed within seconds, it's a private branch, and you've confirmed with the team, <code>git push --force-with-lease origin main</code> back to the old SHA is acceptable — announce it either way.</p>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Branch protection rules, plus <code>git config --global push.default simple</code> so you never push a branch you're not on.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I pulled and now Git says the branches have diverged."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v"><em>"Your branch and 'origin/main' have diverged, and have 2 and 5 different commits each."</em></div></div>
+  <div class="f"><div class="k">Why</div><div class="v">You committed locally while someone else pushed. Both histories moved forward from a shared ancestor — normal, not broken.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>git reset --hard origin/main</code> — that silently deletes your 2 commits. Don't force-push over their 5.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Look first, then pick rebase (your branch) or merge (shared branch).</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git fetch origin
+git log --oneline --graph --all -15
+git log --oneline origin/main..HEAD    <span class="c"># MY commits — confirm they matter</span>
+
+<span class="c"># Your own feature branch → replay on top, stay linear</span>
+git rebase origin/main
+git push --force-with-lease
+
+<span class="c"># Shared branch → merge, no force-push needed</span>
+git merge origin/main
+git push</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v"><code>git pull --ff-only</code> as your default — it refuses to guess and hands you the decision before anything happens.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I'm in the middle of a rebase and don't know what to do."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">Prompt shows something like <code>(feature|REBASE 3/7)</code>, there are conflicts, and every command feels risky.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">Git is replaying your commits one at a time and stopped on commit 3 of 7 because it couldn't apply it cleanly.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>git commit</code> (use <code>--continue</code>), don't <code>git pull</code>, don't switch branches, and don't delete <code>.git/rebase-merge/</code> by hand.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">When in doubt: <code>git rebase --abort</code>. It returns you exactly to where you started, losing nothing. There is no shame in aborting.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git status                  <span class="c"># tells you which step and which files</span>
+
+<span class="c"># A) Get out, no harm done</span>
+git rebase --abort
+
+<span class="c"># B) Push through</span>
+git diff --name-only --diff-filter=U   <span class="c"># conflicted files</span>
+<span class="c"># ...edit each one, remove markers...</span>
+git add &lt;file&gt;
+git rebase --continue
+
+<span class="c"># C) This commit is now redundant (already upstream)</span>
+git rebase --skip</pre></div>
+    <p>Remember: during rebase, <code>--ours</code> = the branch you're rebasing onto, <code>--theirs</code> = your own commit.</p>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Rebase onto main daily so you resolve one small conflict instead of twenty. Enable <code>rerere</code>.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I accidentally force-pushed."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">You overwrote the remote branch and someone else's commits are no longer there.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v"><code>--force</code> tells the remote "make the branch this, regardless of what's there".</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't force-push again to "fix" it before you know the correct target SHA. Don't stay quiet — tell the team immediately so nobody else pulls the damaged branch.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Find the old remote SHA and force-push it back. Sources, in order of ease: your own <code>git reflog</code>; a teammate's clone (<code>git reflog show origin/main</code>); GitHub/GitLab's activity or events API, which records the "before" SHA of every push; or a CI job log.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git reflog show origin/main         <span class="c"># your cached view of the remote</span>
+git log --oneline &lt;old-sha&gt; -5      <span class="c"># verify it's the right history</span>
+git push --force-with-lease origin &lt;old-sha&gt;:main
+
+<span class="c"># A teammate who still has the good commits can simply:</span>
+git push origin main</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Alias force away: <code>git config --global alias.pushf "push --force-with-lease"</code> and never type <code>--force</code>. Enable branch protection so the server rejects force-pushes to <code>main</code> outright.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"--force vs --force-with-lease: which do I use?"</h3>
+  <div class="f"><div class="k">Difference</div><div class="v"><code>--force</code> overwrites the remote unconditionally. <code>--force-with-lease</code> first checks the remote branch still points where <em>you last saw it</em>, and aborts if someone pushed in the meantime.</div></div>
+  <div class="f"><div class="k good">Rule</div><div class="v">Use <code>--force-with-lease</code>. Always. There is no situation where plain <code>--force</code> is meaningfully better.</div></div>
+  <div class="f"><div class="k warn">Sharp edge</div><div class="v">The "lease" is based on your remote-tracking ref. If your IDE auto-fetches in the background, the ref silently updates and the lease now approves the overwrite. Pin it explicitly when it matters:</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git push --force-with-lease
+git push --force-with-lease=main:&lt;sha-I-expect-on-remote&gt;   <span class="c"># bulletproof</span></pre></div>
+  </div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"My commit disappeared."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">Work you know you committed isn't in <code>git log</code> anymore.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">Almost always one of: a <code>reset --hard</code>, a rebase that dropped or squashed it, a deleted branch, an amend that replaced it, or you're on a different branch than you think.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't run <code>git gc</code>, don't re-clone, and don't keep running destructive commands — every one of them adds noise to the reflog you're about to read.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Committed work is essentially never lost for ~90 days. Find the SHA, park it on a new branch, verify, then merge.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git reflog --date=relative | head -30
+git show HEAD@{5}                    <span class="c"># is this the one?</span>
+git branch rescue HEAD@{5}           <span class="c"># park it safely — don't reset yet</span>
+git switch rescue &amp;&amp; git log --oneline -5
+
+<span class="c"># Reflog doesn't have it (e.g. commit made in a deleted branch)</span>
+git fsck --lost-found
+git log --oneline --all --grep="part of the message"</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Push feature branches early — a pushed branch is an off-machine backup that no local mistake can touch.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I have merge conflicts."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v"><em>"Automatic merge failed; fix conflicts and then commit the result."</em></div></div>
+  <div class="f"><div class="k">Why</div><div class="v">Two branches changed the same lines, or one edited a file the other deleted. Git refuses to guess.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't commit with markers still in the file. Don't blindly <code>--theirs</code> everything to make it stop. Don't leave a half-resolved merge overnight — <code>git stash</code> won't save you cleanly from it.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Resolve file by file, stage each as you go, run the tests, then complete the operation.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git status                                <span class="c"># the to-do list</span>
+git diff --name-only --diff-filter=U
+<span class="c"># edit files, delete &lt;&lt;&lt;&lt;&lt;&lt;&lt; ======= &gt;&gt;&gt;&gt;&gt;&gt;&gt;</span>
+git add &lt;file&gt;
+git commit                                <span class="c"># merge</span>
+git rebase --continue                     <span class="c"># rebase</span>
+
+<span class="c"># escape hatch</span>
+git merge --abort   |   git rebase --abort</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Smaller, shorter-lived branches; sync with main daily; agree on formatting/lint config so the whole team isn't reformatting the same lines.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I need to undo a commit that is already pushed."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">A bad commit is on a shared branch and other people have it.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">It happens. The question is only whether you undo it safely or make it everyone's problem.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>reset --hard</code> + force-push a shared branch. Everyone who pulled will re-push the "missing" commits and it comes straight back, tangled.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v"><code>git revert</code>. It's a normal forward commit — reviewable, revertible, and it breaks nobody's clone.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git switch main &amp;&amp; git pull --ff-only
+git revert abc1234
+git push
+
+<span class="c"># several commits — newest first</span>
+git revert --no-commit def5678 abc1234
+git commit -m "revert: roll back broken checkout validation"
+
+<span class="c"># it was a merge commit</span>
+git revert -m 1 &lt;merge-sha&gt;</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Require PR review and green CI before merge to <code>main</code>.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I have uncommitted changes and need to switch branches."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v"><em>"Your local changes would be overwritten by checkout."</em></div></div>
+  <div class="f"><div class="k">Why</div><div class="v">The target branch has different content in files you've edited, so switching would destroy your edits. Git is protecting you.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't reach for <code>git checkout -f</code> or <code>git restore .</code> to "clear the block" — that's exactly the data loss Git just prevented.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Three good options depending on whether the work belongs here or there.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre><span class="c"># A) Work belongs on THIS branch → commit (even as WIP)</span>
+git add -A &amp;&amp; git commit -m "wip"
+
+<span class="c"># B) Shelve it, switch, come back later</span>
+git stash push -u -m "wip: cart totals"
+git switch other-branch
+<span class="c"># ...later...</span>
+git switch -  &amp;&amp;  git stash pop
+
+<span class="c"># C) Work belongs on the OTHER branch → carry it across</span>
+git switch -m other-branch      <span class="c"># merges your edits into the switch</span>
+
+<span class="c"># D) Genuinely don't need it</span>
+git restore .                   <span class="c"># ⚠ permanent</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Set <code>git config --global rebase.autostash true</code>, and use <code>git worktree add ../hotfix main</code> when you need two branches checked out at once instead of context-switching.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"My stash is gone / stash pop hit a conflict."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">You dropped a stash, ran <code>git stash clear</code>, or <code>pop</code> conflicted and you're unsure what state you're in.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v"><code>pop</code> = apply + drop, but on conflict it <em>keeps</em> the entry. <code>clear</code> deletes every entry with no confirmation.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't re-run <code>git stash pop</code> repeatedly during a conflict — you'll stack duplicate changes. Don't <code>git reset --hard</code> to escape; that discards the applied part too.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Stash entries are commits, so <code>git fsck</code> can find them even after a drop.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre><span class="c"># pop conflicted: resolve like any conflict, then remove the entry</span>
+git status &amp;&amp; git add &lt;resolved-files&gt;
+git stash drop
+
+<span class="c"># dropped/cleared by accident — find orphaned stash commits</span>
+git fsck --unreachable | grep commit | cut -d' ' -f3 \
+  | xargs git log --merges --no-walk --oneline
+git stash apply &lt;sha&gt;</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Prefer <code>git stash apply</code> over <code>pop</code> (keeps the safety copy), always label with <code>-m</code>, always include <code>-u</code>, and don't let stashes live more than a day.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I'm in detached HEAD state."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v"><em>"You are in 'detached HEAD' state."</em> Commits you make here belong to no branch.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">You checked out a raw SHA or tag, or you're mid-bisect/mid-rebase. HEAD points at a commit instead of a branch.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't <code>git switch main</code> if you've made commits here — they become unreferenced immediately (recoverable via reflog, but why).</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">If you made commits, give them a branch first. If you didn't, just switch away.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre><span class="c"># Made commits you want to keep</span>
+git switch -c rescue-work        <span class="c"># names your current position</span>
+git switch main &amp;&amp; git merge rescue-work
+
+<span class="c"># Made nothing / don't care</span>
+git switch main
+
+<span class="c"># Already left and lost them</span>
+git reflog &amp;&amp; git branch rescue &lt;sha&gt;
+
+<span class="c"># It was bisect</span>
+git bisect reset</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Use <code>git switch --detach &lt;sha&gt;</code> when you mean it, and create a branch the moment you decide to commit.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I accidentally deleted a branch."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v"><code>git branch -D feature/x</code> and it had unmerged commits.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v"><code>-D</code> skips the merge-safety check that <code>-d</code> performs.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't run <code>git gc --prune=now</code> — that's the one thing that can actually make it permanent.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">The commits still exist; only the pointer was removed. Recreate the pointer.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git reflog                        <span class="c"># find last commit on that branch</span>
+git branch feature/x abc1234      <span class="c"># resurrect</span>
+
+<span class="c"># It was pushed once — even easier</span>
+git fetch origin
+git switch -c feature/x origin/feature/x
+
+<span class="c"># Reflog too noisy</span>
+git fsck --full --no-reflogs --unreachable --lost-found
+git log --oneline --all --grep="known commit text"</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Use <code>-d</code> and let it refuse. Push branches so the remote holds a copy.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"My commit message is wrong."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">Typo, wrong ticket number, or a message that says nothing.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v"><code>-m</code> with fingers faster than brain.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't amend or rebase a message on a shared branch just for tidiness — rewriting public history to fix a typo isn't worth the disruption. Add a follow-up note in the PR instead.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Amend if it's the last commit; interactive rebase with <code>reword</code> if it's older; both are fine while unpushed or on a solo branch.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git commit --amend -m "fix(api): handle null customer id"   <span class="c"># last commit</span>
+
+git rebase -i HEAD~5      <span class="c"># older: change 'pick' → 'reword' on that line</span>
+
+<span class="c"># if it was already pushed to YOUR OWN branch</span>
+git push --force-with-lease</pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Use <code>git commit</code> without <code>-m</code> so the editor opens, and add a commit-message template with <code>git config --global commit.template ~/.gitmessage</code>.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I need to remove a file from a commit."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">A <code>.env</code>, a 200 MB binary, or someone else's unrelated change rode along.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v"><code>git add .</code> without reading <code>git status</code>.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't just delete the file in a <em>new</em> commit and call it done — it's still in history, still in every clone, and still fetchable. For secrets that's a breach, not a typo.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Depends entirely on whether it's pushed.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre><span class="c"># Last commit, not pushed</span>
+git rm --cached .env
+git commit --amend --no-edit
+echo ".env" &gt;&gt; .gitignore
+
+<span class="c"># Older commit, not pushed</span>
+git rebase -i &lt;sha&gt;~1      <span class="c"># mark 'edit'</span>
+git rm --cached path/to/file
+git commit --amend --no-edit
+git rebase --continue
+
+<span class="c"># Already pushed — rewrite history (coordinate with the team!)</span>
+git filter-repo --path path/to/file --invert-paths
+git push --force-with-lease --all</pre></div>
+    <div class="note danger"><strong>If it was a credential</strong>
+    Rotate the key first. History rewriting takes hours and never reaches forks, caches, or CI logs. Assume it's compromised the moment it's pushed.</div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">A good <code>.gitignore</code> from day one, plus a pre-commit secret scanner (gitleaks, git-secrets).</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"I ran git reset --hard and lost work."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">Commits and/or uncommitted edits vanished.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v"><code>--hard</code> moves the branch pointer <em>and</em> overwrites the index and working tree.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't keep running commands hoping something reappears. Don't <code>git gc</code>. Stop and read the reflog.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Committed work: fully recoverable. Staged-but-uncommitted: usually recoverable as dangling blobs. Never-staged edits: gone — check your editor's local history.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git reflog
+git branch rescue HEAD@{1}        <span class="c"># park it, verify, then merge</span>
+
+<span class="c"># it was staged but never committed</span>
+git fsck --lost-found
+ls .git/lost-found/other/          <span class="c"># dangling blobs; cat them to identify</span></pre></div>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Make <code>git stash -u</code> your "clean slate" reflex instead of <code>reset --hard</code>. It gives the same clean tree and is fully reversible.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"A bad merge or rebase landed and I want it gone."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v">The merge/rebase completed but the result is wrong — duplicated commits, lost changes, broken build.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">Conflicts resolved in the wrong direction, or the wrong base was chosen.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't try to hand-patch the result forward. Rewind to a known-good SHA and redo it deliberately.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Not pushed → reset to <code>ORIG_HEAD</code> or a reflog SHA. Pushed → revert the merge commit.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre><span class="c"># Immediately after, not pushed</span>
+git reset --hard ORIG_HEAD
+
+<span class="c"># A while later, not pushed</span>
+git reflog
+git reset --hard HEAD@{7}         <span class="c"># the entry just before the operation</span>
+
+<span class="c"># Already pushed to a shared branch</span>
+git revert -m 1 &lt;merge-sha&gt;       <span class="c"># -m 1 keeps the branch you merged INTO</span>
+git push</pre></div>
+    <p>If you later need to re-merge that feature after reverting the merge, revert the revert first — otherwise Git considers it already merged and brings nothing.</p>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Tag or note the SHA before risky operations: <code>git branch backup-$(date +%F)</code> costs one second.</div></div>
+</div>
+
+<div class="sit" data-searchable>
+  <h3>"Push rejected: non-fast-forward."</h3>
+  <div class="f"><div class="k">Happened</div><div class="v"><code>! [rejected] main -&gt; main (fetch first)</code> or <code>(non-fast-forward)</code>.</div></div>
+  <div class="f"><div class="k">Why</div><div class="v">The remote branch has commits you don't have locally, so your push would erase them. Git refuses.</div></div>
+  <div class="f"><div class="k bad">Don't</div><div class="v">Don't "solve" it with <code>--force</code>. That does exactly what Git just stopped: deletes your colleague's work.</div></div>
+  <div class="f"><div class="k good">Safe fix</div><div class="v">Integrate the remote commits first, then push normally.</div></div>
+  <div class="f"><div class="k">Commands</div><div class="v">
+    <div class="cmd"><button class="copy">copy</button><pre>git fetch origin
+git log --oneline HEAD..origin/main    <span class="c"># what am I missing?</span>
+
+git rebase origin/main                 <span class="c"># your branch → linear</span>
+<span class="c"># or</span>
+git merge origin/main                  <span class="c"># shared branch → safe</span>
+
+git push</pre></div>
+    <p>The one legitimate exception: you rebased or amended <em>your own</em> feature branch. Then <code>git push --force-with-lease</code> is correct and expected.</p>
+  </div></div>
+  <div class="f"><div class="k">Prevention</div><div class="v">Fetch before you push. <code>git pull --ff-only &amp;&amp; git push</code> as one habit.</div></div>
+</div>
+</section>
+
+<!-- ============ CHEAT SHEET 1 ============ -->
+<section id="cs-daily">
+<h2 class="sec">1 · Most-used Git commands</h2>
+<div class="card" data-searchable>
+  <table class="wrapfirst">
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>git status -sb</code></td><td>Compact state of everything. Run it constantly</td></tr>
+    <tr><td><code>git switch -c feat/x</code></td><td>Create and move to a new branch</td></tr>
+    <tr><td><code>git switch -</code></td><td>Back to the previous branch</td></tr>
+    <tr><td><code>git add -p</code></td><td>Stage hunk by hunk — review as you go</td></tr>
+    <tr><td><code>git commit -m "…"</code></td><td>Commit staged changes</td></tr>
+    <tr><td><code>git commit --amend --no-edit</code></td><td>Fold staged changes into the last commit</td></tr>
+    <tr><td><code>git fetch --all --prune</code></td><td>Refresh remote refs, drop dead ones. Always safe</td></tr>
+    <tr><td><code>git pull --ff-only</code></td><td>Update without inventing a merge commit</td></tr>
+    <tr><td><code>git rebase origin/main</code></td><td>Replay your branch on the latest main</td></tr>
+    <tr><td><code>git push -u origin HEAD</code></td><td>Push current branch and set upstream</td></tr>
+    <tr><td><code>git push --force-with-lease</code></td><td>Safe force-push after rebase/amend</td></tr>
+    <tr><td><code>git stash push -u -m "wip"</code></td><td>Shelve everything, including new files</td></tr>
+    <tr><td><code>git stash pop</code></td><td>Bring it back</td></tr>
+    <tr><td><code>git log --oneline --graph --all</code></td><td>See the actual shape of history</td></tr>
+    <tr><td><code>git diff --staged</code></td><td>Review exactly what you're about to commit</td></tr>
+    <tr><td><code>git show &lt;sha&gt;</code></td><td>Message + diff for one commit</td></tr>
+    <tr><td><code>git restore --staged &lt;f&gt;</code></td><td>Unstage, keep the edit</td></tr>
+    <tr><td><code>git revert &lt;sha&gt;</code></td><td>Safely undo a pushed commit</td></tr>
+    <tr><td><code>git reflog</code></td><td>Where HEAD has been. Your undo history</td></tr>
+    <tr><td><code>git branch -vv</code></td><td>Branches, upstreams, ahead/behind counts</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ============ CHEAT SHEET 2 ============ -->
+<section id="cs-emergency">
+<h2 class="sec">2 · Emergency recovery cheat sheet</h2>
+<div class="card" data-searchable>
+  <div class="note danger"><strong>Before anything else</strong>
+  Stop. Run <code>git status</code> and <code>git reflog</code>. Then <code>git branch backup-now</code> to freeze your current position. Almost every "I destroyed everything" story is really "I ran three more destructive commands while panicking."</div>
+  <table class="wrapfirst">
+    <tr><th>Emergency</th><th>Command</th></tr>
+    <tr><td>Undo the merge/rebase/pull I just did</td><td><code>git reset --hard ORIG_HEAD</code></td></tr>
+    <tr><td>Undo anything, a while ago</td><td><code>git reflog</code> → <code>git reset --hard HEAD@{n}</code></td></tr>
+    <tr><td>Find a lost commit</td><td><code>git reflog</code> → <code>git branch rescue &lt;sha&gt;</code></td></tr>
+    <tr><td>Find a commit reflog can't see</td><td><code>git fsck --lost-found</code></td></tr>
+    <tr><td>Restore a deleted branch</td><td><code>git branch &lt;name&gt; &lt;sha-from-reflog&gt;</code></td></tr>
+    <tr><td>Get out of a rebase</td><td><code>git rebase --abort</code></td></tr>
+    <tr><td>Get out of a merge</td><td><code>git merge --abort</code></td></tr>
+    <tr><td>Get out of a cherry-pick</td><td><code>git cherry-pick --abort</code></td></tr>
+    <tr><td>Get out of a bisect</td><td><code>git bisect reset</code></td></tr>
+    <tr><td>Leave detached HEAD, keep work</td><td><code>git switch -c rescue</code></td></tr>
+    <tr><td>Undo a pushed commit</td><td><code>git revert &lt;sha&gt; &amp;&amp; git push</code></td></tr>
+    <tr><td>Undo a pushed merge</td><td><code>git revert -m 1 &lt;merge-sha&gt;</code></td></tr>
+    <tr><td>Recover a dropped stash</td><td><code>git fsck --unreachable | grep commit</code> → <code>git stash apply &lt;sha&gt;</code></td></tr>
+    <tr><td>Undo a bad force-push</td><td><code>git reflog show origin/main</code> → <code>git push --force-with-lease origin &lt;sha&gt;:main</code></td></tr>
+    <tr><td>Move commits off the wrong branch</td><td><code>git branch right-one</code> → <code>git reset --hard origin/main</code></td></tr>
+    <tr><td>Make local exactly match remote</td><td><code>git fetch &amp;&amp; git reset --hard origin/main</code> ⚠</td></tr>
+    <tr><td>Recover a file from an old commit</td><td><code>git restore --source=&lt;sha&gt; -- path/file</code></td></tr>
+    <tr><td>Find which commit broke it</td><td><code>git bisect start</code> / <code>bad</code> / <code>good &lt;sha&gt;</code></td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ============ CHEAT SHEET 3 ============ -->
+<section id="cs-tree">
+<h2 class="sec">3 · Decision tree — "I want to X, use Y"</h2>
+<div class="card" data-searchable>
+  <table class="wrapfirst">
+    <tr><th>I want to…</th><th>Use</th></tr>
+    <tr><td>See what's going on</td><td><code>git status -sb</code></td></tr>
+    <tr><td>See what changed before committing</td><td><code>git diff</code> / <code>git diff --staged</code></td></tr>
+    <tr><td>Check the remote without changing anything</td><td><code>git fetch</code></td></tr>
+    <tr><td>Get the latest, I have no local commits</td><td><code>git pull --ff-only</code></td></tr>
+    <tr><td>Get the latest, I have local commits, solo branch</td><td><code>git rebase origin/main</code></td></tr>
+    <tr><td>Get the latest, I have local commits, shared branch</td><td><code>git merge origin/main</code></td></tr>
+    <tr><td>Start new work</td><td><code>git switch -c feat/x</code></td></tr>
+    <tr><td>Park work for 20 minutes</td><td><code>git stash push -u -m "…"</code></td></tr>
+    <tr><td>Park work for a day or more</td><td>WIP commit on a branch, then push</td></tr>
+    <tr><td>Fix the last commit's message or contents</td><td><code>git commit --amend</code></td></tr>
+    <tr><td>Squash / reorder / drop my own commits</td><td><code>git rebase -i origin/main</code></td></tr>
+    <tr><td>Undo a local commit, keep the code</td><td><code>git reset --soft HEAD~1</code></td></tr>
+    <tr><td>Undo a pushed commit</td><td><code>git revert &lt;sha&gt;</code></td></tr>
+    <tr><td>Throw away edits to one file</td><td><code>git restore &lt;file&gt;</code> ⚠</td></tr>
+    <tr><td>Unstage without losing edits</td><td><code>git restore --staged &lt;file&gt;</code></td></tr>
+    <tr><td>Take just one commit from another branch</td><td><code>git cherry-pick &lt;sha&gt;</code></td></tr>
+    <tr><td>Take just one file from another branch</td><td><code>git checkout &lt;branch&gt; -- &lt;file&gt;</code></td></tr>
+    <tr><td>Bring a whole finished branch in</td><td><code>git merge &lt;branch&gt;</code></td></tr>
+    <tr><td>Find when a bug appeared</td><td><code>git bisect</code></td></tr>
+    <tr><td>Find when a line of code appeared</td><td><code>git log -S"text"</code> or <code>git blame</code></td></tr>
+    <tr><td>Mark a release</td><td><code>git tag -a v1.0.0 -m "…"</code> then push the tag</td></tr>
+    <tr><td>Delete untracked junk</td><td><code>git clean -nd</code> first, then <code>-fd</code></td></tr>
+    <tr><td>Work on two branches at once</td><td><code>git worktree add ../hotfix main</code></td></tr>
+    <tr><td>Recover from literally anything</td><td><code>git reflog</code></td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ============ CHEAT SHEET 4 ============ -->
+<section id="cs-mistakes">
+<h2 class="sec">4 · Top mistakes that turn a small problem into a big one</h2>
+<div class="card" data-searchable>
+  <table class="wrapfirst">
+    <tr><th>Mistake</th><th>Why it escalates</th><th>Do instead</th></tr>
+    <tr><td><code>git push --force</code> on a shared branch</td><td>Deletes teammates' commits; they re-push and history tangles for days</td><td><code>--force-with-lease</code>, and only on your own branch</td></tr>
+    <tr><td><code>git reset --hard</code> while panicking</td><td>Destroys the uncommitted work you were trying to save</td><td><code>git stash -u</code>, then <code>git reflog</code></td></tr>
+    <tr><td>Rebasing a branch others have pulled</td><td>Everyone's history diverges from yours simultaneously</td><td>Merge on shared branches</td></tr>
+    <tr><td>Running more commands before reading the error</td><td>Buries the recoverable state under noise</td><td>Stop. <code>git status</code>, then <code>git reflog</code></td></tr>
+    <tr><td><code>git checkout -- .</code> / <code>git restore .</code></td><td>The one deletion Git genuinely can't undo</td><td><code>git stash -u</code> — same clean tree, reversible</td></tr>
+    <tr><td>Committing secrets, then "deleting" them in a new commit</td><td>Still in history and in every clone; a breach, not a typo</td><td>Rotate the credential, then rewrite history</td></tr>
+    <tr><td><code>git clean -fdx</code> without <code>-n</code></td><td>Wipes <code>.env</code>, certs, IDE config. No recovery path at all</td><td>Always dry-run with <code>-n</code> first</td></tr>
+    <tr><td>Giant long-lived branches</td><td>Conflict pain grows superlinearly with time and size</td><td>Small PRs, sync with main daily</td></tr>
+    <tr><td>Committing conflict markers</td><td>Breaks the build and hides the real resolution in a later "fix" commit</td><td>Grep for <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> and run tests before committing</td></tr>
+    <tr><td>Force-pushing to fix a rejected push</td><td>Does precisely what the rejection was protecting against</td><td><code>git fetch</code> then rebase or merge</td></tr>
+    <tr><td>Never pushing your branch</td><td>Every local mistake becomes unrecoverable</td><td>Push early; the remote is your backup</td></tr>
+    <tr><td>Hiding the mistake from the team</td><td>Others pull the broken state and multiply it</td><td>Say it in chat within 60 seconds. Always the cheapest fix</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ============ CHEAT SHEET 5 ============ -->
+<section id="cs-interview">
+<h2 class="sec">5 · Short interview questions</h2>
+<p class="secintro">Click to reveal a crisp answer. These are the ones that actually come up.</p>
+
+<div data-searchable>
+<details><summary>What's the difference between <code>git fetch</code> and <code>git pull</code>?</summary><div class="ans">Fetch downloads remote objects and updates remote-tracking refs, changing nothing in your working tree. Pull is fetch plus an immediate merge or rebase into your current branch. Fetch is always safe; pull makes a decision for you.</div></details>
+
+<details><summary>Merge vs rebase?</summary><div class="ans">Merge joins two histories with a merge commit and never rewrites existing commits — honest but bushy. Rebase replays your commits onto a new base, creating new SHAs — linear and readable, but it rewrites history, so only on branches nobody else has.</div></details>
+
+<details><summary>What are <code>reset</code>, <code>revert</code>, and <code>restore</code> for?</summary><div class="ans"><code>reset</code> moves a branch pointer (and optionally index/working tree) — for local, unpushed history. <code>revert</code> creates a new commit that undoes an old one — for pushed, shared history. <code>restore</code> operates on files in the working tree or index, not on commits.</div></details>
+
+<details><summary>Explain <code>--soft</code>, <code>--mixed</code>, and <code>--hard</code>.</summary><div class="ans">All three move the branch pointer. <code>--soft</code> leaves index and working tree intact (changes stay staged). <code>--mixed</code> (default) resets the index but keeps the working tree (changes remain, unstaged). <code>--hard</code> resets everything, discarding uncommitted work permanently.</div></details>
+
+<details><summary>What is HEAD, and what is a detached HEAD?</summary><div class="ans">HEAD is a pointer to your current branch, which in turn points to a commit. Detached HEAD means HEAD points straight at a commit with no branch in between, so new commits belong to nothing and become unreachable when you switch away — recoverable via reflog, or preventable with <code>git switch -c &lt;name&gt;</code>.</div></details>
+
+<details><summary><code>--force</code> vs <code>--force-with-lease</code>?</summary><div class="ans"><code>--force</code> overwrites the remote branch unconditionally. <code>--force-with-lease</code> verifies the remote still points where your last fetch saw it and aborts otherwise, protecting commits pushed by others in the meantime. Always prefer the lease version.</div></details>
+
+<details><summary>Golden rule of rebasing?</summary><div class="ans">Never rebase commits that have been pushed to a branch other people work on. Rebase produces new SHAs, so everyone else's history instantly diverges from yours.</div></details>
+
+<details><summary>How do you undo a commit that's already pushed?</summary><div class="ans"><code>git revert &lt;sha&gt;</code> then push. It adds an inverse commit rather than rewriting history, so no one's clone breaks. For a merge commit, <code>git revert -m 1 &lt;sha&gt;</code>.</div></details>
+
+<details><summary>What is <code>git reflog</code> and when do you use it?</summary><div class="ans">A local log of every position HEAD has held — including commits no branch points to anymore. It's the recovery tool for bad resets, botched rebases, deleted branches, and lost commits, typically covering the last ~90 days.</div></details>
+
+<details><summary>How do you recover a deleted branch?</summary><div class="ans">Find the branch tip in <code>git reflog</code>, then <code>git branch &lt;name&gt; &lt;sha&gt;</code>. If it had been pushed, simpler still: <code>git switch -c &lt;name&gt; origin/&lt;name&gt;</code>.</div></details>
+
+<details><summary>What is the index / staging area for?</summary><div class="ans">It's the proposed snapshot of your next commit. It lets you commit a curated subset of your changes — for example splitting one messy working tree into two clean, reviewable commits with <code>git add -p</code>.</div></details>
+
+<details><summary>Cherry-pick vs merge?</summary><div class="ans">Merge integrates an entire branch and records the relationship. Cherry-pick copies one commit's diff as a brand-new commit with a different SHA — useful for backporting a hotfix, but it duplicates work if the source branch is merged later.</div></details>
+
+<details><summary>What causes a non-fast-forward push rejection?</summary><div class="ans">The remote branch has commits your local branch doesn't, so your push would discard them. Fix by fetching and then rebasing or merging, never by forcing.</div></details>
+
+<details><summary><code>A..B</code> vs <code>A...B</code>?</summary><div class="ans">In <code>git log</code>, <code>A..B</code> is commits reachable from B but not A; <code>A...B</code> is the symmetric difference (in either but not both). In <code>git diff</code>, <code>A...B</code> means "changes on B since it diverged from A" — the diff a pull request shows.</div></details>
+
+<details><summary>What does <code>git stash</code> actually store?</summary><div class="ans">Hidden commits holding your modified tracked files (and, with <code>-u</code>, untracked ones), on a stack. Because they're commits, a dropped stash can still be found with <code>git fsck --unreachable</code>.</div></details>
+
+<details><summary>Squash merge — pros and cons?</summary><div class="ans">Pro: one clean commit per feature on main, easy to read and revert. Con: you lose the individual commits, which hurts <code>git bisect</code> granularity and blame precision, and the source branch's SHAs never appear on main.</div></details>
+
+<details><summary>How does <code>git bisect</code> work?</summary><div class="ans">Binary search over history. You mark a known-good and known-bad commit; Git checks out midpoints for you to test, halving the range each time, until it names the first bad commit. <code>git bisect run &lt;cmd&gt;</code> automates it entirely.</div></details>
+
+<details><summary>Lightweight vs annotated tag?</summary><div class="ans">A lightweight tag is just a named pointer to a commit. An annotated tag is a full object with tagger, date, message, and optional GPG signature — use annotated for releases, since <code>git describe</code> and most tooling expect them.</div></details>
+
+<details><summary>What is <code>origin/main</code>, really?</summary><div class="ans">A local, read-only cache of where <code>main</code> was on the remote the last time you fetched. It is not live. That's why <code>git status</code> can say "up to date" about a branch that moved ten minutes ago.</div></details>
+
+<details><summary>How do you resolve a merge conflict?</summary><div class="ans">Run <code>git status</code> to list unmerged paths, edit each file to the correct combined result and remove the conflict markers, <code>git add</code> each resolved file, then <code>git commit</code> (merge) or <code>git rebase --continue</code> (rebase) — and run the tests. <code>git merge --abort</code> backs out entirely.</div></details>
+</div>
+</section>
+
+<footer>
+  Git Survival Guide · Recovery-first reference. Rule of thumb: anything committed is recoverable via <code>git reflog</code> for ~90 days; anything uncommitted is not. Commit or stash before every destructive command.
+</footer>
+</main>
+</div>
+
+<script>
+(function () {
+  // --- sidebar show / hide ---
+  var root = document.documentElement;
+  var navEl = document.querySelector('nav');
+  var narrow = window.matchMedia('(max-width: 900px)');
+
+  function setNav(collapsed) {
+    root.classList.toggle('nav-collapsed', collapsed);
+    try { localStorage.setItem('gsg-nav', collapsed ? '1' : '0'); } catch (e) {}
+  }
+  document.getElementById('navtoggle').addEventListener('click', function () { setNav(true); });
+  document.getElementById('navshow').addEventListener('click', function () { setNav(false); });
+  navEl.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A' && narrow.matches) setNav(true);
+  });
+
+  // --- copy buttons ---
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = btn.parentElement.querySelector('pre');
+      var text = pre.innerText;
+      var done = function () {
+        btn.textContent = 'copied';
+        setTimeout(function () { btn.textContent = 'copy'; }, 1400);
+      };
+      var fallback = function () {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          done();
+        } catch (e) {
+          var r = document.createRange();
+          r.selectNodeContents(pre);
+          var s = window.getSelection();
+          s.removeAllRanges();
+          s.addRange(r);
+          btn.textContent = 'selected';
+          setTimeout(function () { btn.textContent = 'copy'; }, 1400);
+        }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    });
+  });
+
+  // --- search / filter ---
+  var input = document.getElementById('search');
+  var note = document.getElementById('searchnote');
+  var blocks = Array.prototype.slice.call(document.querySelectorAll('[data-searchable]'));
+  blocks.forEach(function (b) { b._text = b.innerText.toLowerCase(); });
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section'));
+
+  function apply() {
+    var q = input.value.trim().toLowerCase();
+    if (!q) {
+      blocks.forEach(function (b) { b.classList.remove('hidden'); });
+      sections.forEach(function (s) { s.classList.remove('hidden'); });
+      note.textContent = '';
+      return;
+    }
+    var terms = q.split(/\s+/);
+    var hits = 0;
+    blocks.forEach(function (b) {
+      var ok = terms.every(function (t) { return b._text.indexOf(t) !== -1; });
+      b.classList.toggle('hidden', !ok);
+      if (ok) hits++;
+    });
+    sections.forEach(function (s) {
+      var kids = s.querySelectorAll('[data-searchable]');
+      if (!kids.length) { s.classList.add('hidden'); return; }
+      var anyVisible = Array.prototype.some.call(kids, function (k) { return !k.classList.contains('hidden'); });
+      s.classList.toggle('hidden', !anyVisible);
+    });
+    note.textContent = hits + (hits === 1 ? ' match' : ' matches');
+  }
+
+  input.addEventListener('input', apply);
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { input.value = ''; apply(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    var typing = document.activeElement === input;
+    if (e.key === '/' && !typing) {
+      e.preventDefault();
+      input.focus();
+    }
+    if (e.key === '\\' && !typing) {
+      e.preventDefault();
+      setNav(!root.classList.contains('nav-collapsed'));
+    }
+  });
+})();
+</script>
+</body>
+</html>
